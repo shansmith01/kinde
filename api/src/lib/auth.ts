@@ -1,21 +1,32 @@
 import { parseJWT, Decoded } from '@redwoodjs/api'
 import { AuthenticationError, ForbiddenError } from '@redwoodjs/graphql-server'
 import { jwtVerify,createRemoteJWKSet } from 'jose'
-import jwksClient from 'jwks-rsa'
-var jwt = require('jsonwebtoken');
-export const authDecoder = async (token: string, type: string) => {
 
+export const authDecoder = async (token: string, type: string) => {
   if (type !== 'custom-auth') {
     return null
   }
 
+  if (process.env.KINDE_DOMAIN !== 'https://boardreport-staging.au.kinde.com') {
+    throw new Error('Kinde domain is not set')
+  }
 
   const JWKS = createRemoteJWKSet(new URL('https://boardreport-staging.au.kinde.com/.well-known/jwks'))
 
-  const { payload: decoded } = await jwtVerify(token, JWKS,).catch((e) => {
-    throw e
-  })
-  return decoded
+  try {
+    const { payload: decoded } = await jwtVerify(token, JWKS, {
+      issuer: process.env.KINDE_DOMAIN,
+      algorithms: ['RS256'],
+    });
+
+    if (decoded.exp < Date.now() / 1000) {
+      throw new Error('Token expired')
+    }
+
+    return decoded;
+  } catch (e) {
+    throw new Error(`Token validation error: ${e.message}`);
+  }
 }
 /**
  * Represents the user attributes returned by the decoding the
@@ -47,23 +58,21 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  */
 
 
-export const getCurrentUser = async (
+export const getCurrentUser =  (
   decoded: Decoded
-): Promise<RedwoodUser | null> => {
+) => {
   if (!decoded) {
     return null
   }
 
-
   const { roles } = parseJWT({ decoded })
 
-  console.log(decoded)
-
   if (roles) {
-    return { ...decoded, roles }
+    const flattenedRoles = roles.map(role =>role.name)
+    return { ...decoded, roles: flattenedRoles }
   }
 
-  return { ...decoded }
+  return decoded
 }
 
 /**
@@ -72,7 +81,6 @@ export const getCurrentUser = async (
  * @returns {boolean} - If the currentUser is authenticated
  */
 export const isAuthenticated = (): boolean => {
-  console.log("isAuthenticated", context.currentUser)
   return !!context.currentUser
 }
 
@@ -91,11 +99,15 @@ type AllowedRoles = string | string[] | undefined
  * or when no roles are provided to check against. Otherwise returns false.
  */
 export const hasRole = (roles: AllowedRoles): boolean => {
+
+  console.log("Roels to check", roles)
   if (!isAuthenticated()) {
     return false
   }
 
   const currentUserRoles = context.currentUser?.roles
+
+  console.log("CurrentUserRoles", currentUserRoles)
 
   if (typeof roles === 'string') {
     if (typeof currentUserRoles === 'string') {

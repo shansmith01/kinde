@@ -1,8 +1,10 @@
 import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
 import { db } from 'src/lib/db'
+import { hasRole } from 'src/lib/auth'
 
 export const users: QueryResolvers['users'] = () => {
+  console.log("has role",hasRole('Admin'))
   return db.user.findMany()
 }
 
