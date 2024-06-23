@@ -34,10 +34,11 @@ export interface ValidateResetTokenResponse {
 // Replace this with the auth service provider client sdk
 
 const client = await createKindeClient({
-  client_id: "c3606f43c657454389737aab1f29c742",
-  domain: "https://boardreport-staging.au.kinde.com",
-  redirect_uri: window.location.origin,
+  client_id: process.env.KINDE_CLIENT_ID,
+  domain: process.env.KINDE_DOMAIN,
+  redirect_uri: process.env.KINDE_REDIRECT_URI,
   is_dangerously_use_local_storage: process.env.NODE_ENV === 'development' ? true : false,
+  logout_uri: process.env.KINDE_LOGOUT_REDIRECT_URI,
   on_redirect_callback(user, appState: { redirectTo: string }) {
     window.location.href = appState?.redirectTo || "/"
   },

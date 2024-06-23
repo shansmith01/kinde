@@ -1,4 +1,40 @@
-# README
+# REDWOOD KINDE EXAMPLE README
+
+This is a RedwoodJS example project that demonstrates how to use the [Kinde](kinde.com) for authentication.
+
+This demo was made by following the [custom auth instructions](https://docs.redwoodjs.com/docs/auth/custom/) on the RedwoodJS website.
+
+Basically we are wrapping the Redwood Auth package around the Kinde Javascript SDK
+
+
+## Basics...
+
+Add the following to your `.env` file:
+
+```
+KINDE_DOMAIN="Your Kinde Domain"
+KINDE_CLIENT_ID="Your Kinde Client ID"
+KINDE_REDIRECT_URI=http://localhost:8910/
+KINDE_LOGOUT_REDIRECT_URI="http://localhost:8910"
+```
+
+Don't forget to add these env vars to your includeEnvironmentVariables in your `redwood.toml` file.
+
+The main files to pay attention to are the `auth.ts` file in the `web/src/` directory and the `auth.ts` file in the `api/src/lib/` directory.
+
+On the API side we are decoding the JWT Access token that gets sent along with each graphql request. This JWT (Kinde Access token) is used to populate currentUser/getCurrentUser() object from the useAuth hook.
+
+You will need to add whatever information you require in a JWT token in the Kinde Dashboard. [See instructions here](https://docs.kinde.com/build/tokens/token-customization/#_top)
+
+It's not possible to add a first and last name to the access token in the Kinde Dashboard. This means you will not be able to see the first and last name on the currentUser/getCurrentUser function.
+
+The First and last name are surfaced by using `userMetadata` from the useAuth hook, along with any other data that you have added to the user token.
+
+This example also deal with roles. If you are using roles make sure these are exposed in your access token. You will be able to use the `hasRole` function from the useAuth hook to check if a user has a specific role. And also protect your graphql queries with the `requireAuth` function. [More on redwood roles here.](https://docs.redwoodjs.com/docs/how-to/role-based-access-control-rbac/#api-side-rbac).
+
+Have fun!
+
+
 
 Welcome to [RedwoodJS](https://redwoodjs.com)!
 
