@@ -1,5 +1,6 @@
 import createKindeClient, {KindeClient} from '@kinde-oss/kinde-auth-pkce-js'
 import { createAuthentication } from '@redwoodjs/auth'
+import { navigate, routes } from '@redwoodjs/router'
 
 // If you're integrating with an auth service provider you should delete this interface.
 // Instead you should import the type from their auth client sdk.
@@ -9,6 +10,7 @@ export interface AuthClient {
   register: () => User
   getToken: () => string
   getUser: () => User | null
+  getUserOrgs: () => { id: string; name: string }[] | { id: string; name: string } | null
 }
 
 // If you're integrating with an auth service provider you should delete this interface.
@@ -35,6 +37,10 @@ const client = await createKindeClient({
   client_id: "c3606f43c657454389737aab1f29c742",
   domain: "https://boardreport-staging.au.kinde.com",
   redirect_uri: window.location.origin,
+  is_dangerously_use_local_storage: process.env.NODE_ENV === 'development' ? true : false,
+  on_redirect_callback(user, appState: { redirectTo: string }) {
+    window.location.href = appState?.redirectTo || "/"
+  },
 });
 
 function createAuth() {
@@ -51,29 +57,13 @@ function createAuth() {
 // you're integrating with
 function createAuthImplementation(client: KindeClient) {
   return {
-    type: 'custom-auth',
+    type: 'kinde-auth',
     client,
     login: async () => client.login(),
     logout: async () => client.logout(),
     signup: async () => client.register(),
     getToken: async () => client.getToken(),
     getUserOrgs: async () => client.getUserOrganizations(),
-    /**
-     * Actual user metadata might look something like this
-     * {
-     *   "id": "11111111-2222-3333-4444-5555555555555",
-     *   "aud": "authenticated",
-     *   "role": "authenticated",
-     *   "roles": ["admin"],
-     *   "email": "email@example.com",
-     *   "app_metadata": {
-     *     "provider": "email"
-     *   },
-     *   "user_metadata": null,
-     *   "created_at": "2016-05-15T19:53:12.368652374-07:00",
-     *   "updated_at": "2016-05-15T19:53:12.368652374-07:00"
-     * }
-     */
     getUserMetadata: async () => client.getUser(),}
 }
 

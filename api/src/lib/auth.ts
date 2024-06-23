@@ -3,7 +3,7 @@ import { AuthenticationError, ForbiddenError } from '@redwoodjs/graphql-server'
 import { jwtVerify,createRemoteJWKSet } from 'jose'
 
 export const authDecoder = async (token: string, type: string) => {
-  if (type !== 'custom-auth') {
+  if (type !== 'kinde-auth') {
     return null
   }
 
@@ -69,7 +69,7 @@ export const getCurrentUser =  (
 
   if (roles) {
     const flattenedRoles = roles.map(role =>role.name)
-    return { ...decoded, roles: flattenedRoles }
+    return { id: decoded.sub, roles: flattenedRoles, email: decoded.email, org_code: decoded.org_code , org_name: decoded.org_name, }
   }
 
   return decoded
