@@ -1,9 +1,29 @@
+import { useKindeAuth } from '@kinde-oss/kinde-auth-react'
+import { routes } from '@redwoodjs/router'
+import { useEffect } from 'react'
 import { useAuth } from 'src/auth'
 
+
+
 const HomePage = () => {
-  const { isAuthenticated,  getCurrentUser, signUp, logOut, logIn } = useAuth()
+  const all = useAuth()
+  const { isAuthenticated,  getCurrentUser, signUp, logOut, logIn, client, hasRole } = useAuth()
+
+  console.log("All", all)
+
+  const createOrg = async () => {
+    await client?.createOrg({
+      org_name: 'my-rw-org-14',
+      app_state: {
+        redirectTo: "users"
+      }
+    })
+  }
 
 
+console.log(all,"HAS ROLE", hasRole('Admin'))
+  // const user = getCurrentUser()
+  //
 
 
   return (
@@ -19,6 +39,7 @@ const HomePage = () => {
       <button onClick={async () => console.log(await getCurrentUser())}>show user</button>
       <button onClick={() => logIn()}>login</button>
       <button onClick={() => logOut()}>logout</button>
+      <button onClick={createOrg}>Org</button>
     </>
   )
 }
